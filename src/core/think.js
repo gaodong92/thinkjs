@@ -12,7 +12,6 @@ import thinkit from 'thinkit';
 import co from 'co';
 import colors from 'colors/safe';
 
-import base from './base.js';
 import httpBase from './http_base.js';
 import Cookie from '../util/cookie.js';
 import Http from './http.js';
@@ -46,24 +45,7 @@ think.sep = path.sep;
  * @type {Number}
  */
 think.startTime = Date.now();
-/**
- * app dir name, can be set in init
- * @type {Object}
- */
-think.dirname = {
-  config: 'config',
-  controller: 'controller',
-  model: 'model',
-  adapter: 'adapter',
-  logic: 'logic',
-  service: 'service',
-  view: 'view',
-  middleware: 'middleware',
-  runtime: 'runtime',
-  common: 'common',
-  bootstrap: 'bootstrap',
-  locale: 'locale'
-};
+
 /**
  * env
  * development | testing | production
@@ -91,27 +73,10 @@ think.lang = (process.env.LANG || '').split('.')[0].replace('_', '-');
  */
 think.isMaster = cluster.isMaster;
 /**
- * app mode
- * 0x0001: mini
- * 0x0002: normal
- * 0x0004: module
- * @type {Boolean}
- */
-think.mode = 0x0001;
-//normal mode
-think.mode_normal = 0x0002;
-//module mode
-think.mode_module = 0x0004;
-/**
- * thinkjs module lib path
- * @type {String}
- */
-think.THINK_LIB_PATH = path.normalize(`${__dirname}/..`);
-/**
  * thinkjs module root path
  * @type {String}
  */
-think.THINK_PATH = path.dirname(think.THINK_LIB_PATH);
+think.THINK_PATH = path.dirname(path.normalize(`${__dirname}/..`));
 /**
  * thinkjs version
  * @param  {) []
@@ -122,16 +87,7 @@ think.version = (() => {
   let {version} = JSON.parse(fs.readFileSync(packageFile, 'utf-8'));
   return version;
 })();
-/**
- * module list
- * @type {Array}
- */
-think.module = [];
-/**
- * base class
- * @type {Class}
- */
-think.base = base;
+
 /**
  * reject promise
  * @param  {[type]} err []
@@ -145,14 +101,6 @@ think.reject = (err) => {
   return Promise.reject(err);
 };
 
-/**
- * check object is http object
- * @param  {Mixed}  obj []
- * @return {Boolean}      []
- */
-think.isHttp = obj => {
-  return !!(obj && think.isObject(obj.req) && think.isObject(obj.res));
-};
 
 /**
  * validate 
@@ -183,75 +131,12 @@ think.route = Route;
  * @type {Function}
  */
 think.config = Config;
-/**
- * get module config
- * @param  {String} module []
- * @return {Object}        []
- */
-think.getModuleConfig = module => {
-  return think.config(undefined, undefined, module);
-};
+
 /**
  * adapter
  * @type {Function}
  */
 think.adapter = Adatper;
-
-/**
- * alias co module to think.co
- * @type {Object}
- */
-think.co = obj => {
-  //optimize invoke co package
-  if(obj && typeof obj.next === 'function'){
-    return co(obj);
-  }
-  return Promise.resolve(obj);
-};
-think.co.wrap = co.wrap;
-
-/**
- * create class
- * @param {Object} methods [methods and props]
- */
-let Class = think.Class;
-think.Class = (type, clean) => {
-  // create class
-  // think.Class({})
-  // think.Class({}, true)
-  if (think.isObject(type)) {
-    return clean === true ? Class(type) : Class(think.base, type);
-  }
-  // create class with superClass
-  // think.Class(function(){}, {})
-  else if (think.isFunction(type)) {
-    return Class(type, clean);
-  }
-
-  //create type class
-  return (superClass, methods) => {
-    // think.controller();
-    // think.controller({})
-    if (think.isObject(superClass) || !superClass) {
-      methods = superClass;
-      superClass = type + '_base';
-    }
-    // think.controller('superClass', {})
-    else if (think.isString(superClass)) {
-      superClass = think.lookClass(superClass, type);
-    }
-    if (think.isString(superClass)) {
-      superClass = think.require(superClass, true);
-      // get class
-      // think.controller('rest')
-      if (!methods) {
-        return superClass;
-      }
-    }
-    return Class(superClass, methods);
-  };
-};
-
 
 /**
  * look up class
