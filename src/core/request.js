@@ -4,7 +4,6 @@ import Cookie from 'think-cookie';
 
 const url = require('url');
 
-
 /**
  * request class
  */

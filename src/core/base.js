@@ -1,5 +1,7 @@
 'use strict';
 
+const path = require('path');
+
 /**
  * Base Class with context
  * @return {Class}
@@ -12,6 +14,27 @@ export default class Base {
    */
   constructor(ctx = {}){
     this.ctx = ctx;
+    this.http = ctx; // support ThinkJS 2.x
+  }
+  /**
+   * invoke method, support __before & __after magic methods
+   * @param  {String} method []
+   * @param  {mixed} data []
+   * @return {Promise}    []
+   */
+  async invoke(method, ...data){
+    if (this.__before) {
+      await this.__before();
+    }
+    // check method is exist
+    if (!this[method]){
+      return Promise.reject(new Error(think.locale('METHOD_NOT_EXIST', method)));
+    }
+    let result = await this[method](...data);
+    if (this.__after) {
+      await this.__after();
+    }
+    return result;
   }
   /**
    * get or set config
@@ -31,20 +54,14 @@ export default class Base {
   async _transMCAAction(controller, action){
     //change module/controller/action when invoke another action
     //make this.display() correct when invoked without any paramters
-    let http = this.http;
+    let ctx = this.ctx;
     let source = {
-      module: http.module,
-      controller: http.controller,
-      action: http.action
+      controller: ctx.controller,
+      action: ctx.action
     };
-    //parse module from pathname
-    http.module = think.config('default_module');
-    if(think.mode === think.mode_module){
-      http.module = controller.__filename.split(think.sep).reverse()[2];
-    }
-
-    http.controller = this.basename(controller.__filename);
-    http.action = action;
+    //@TODO controller may be has sub controllers
+    ctx.controller = path.basename(controller.__filename, '.js');
+    ctx.action = action;
     if (action !== '__call') {
       action = think.camelCase(action) + 'Action';
     }
@@ -52,7 +69,7 @@ export default class Base {
     let result = await controller.invoke(action, controller).catch(e => {
       err = e;
     });
-    think.extend(http, source);
+    think.extend(ctx, source);
     return err ? Promise.reject(err) : result;
   }
   /**
@@ -90,7 +107,7 @@ export default class Base {
    * @return {Promise}       []
    */
   hook(event, data){
-    return think.hook.exec(event, this.http, data);
+    return think.hook.exec(event, this.ctx, data);
   }
   /**
    * get model

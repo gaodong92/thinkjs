@@ -1,12 +1,9 @@
 'use strict';
 
-
-import mime from 'mime';
 import Request from './request.js';
 import Response from './response.js';
 
 const url = require('url');
-const fs = require('fs');
 
 /**
  * wrap for request & response
@@ -18,9 +15,7 @@ export default class Context {
    * @return {} []
    */
   constructor(req, res){
-    //request object
     this.req = req;
-    //response object
     this.res = res;
     this._req = new Request(req);
     this._res = new Response(res);
