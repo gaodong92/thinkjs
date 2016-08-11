@@ -13,7 +13,7 @@ import Checker from './util/checker.js';
 
 import './core/think.js';
 
-export default class {
+export default class Think {
   /**
    * init
    * @param  {Object} options [project options]
@@ -21,7 +21,7 @@ export default class {
    */
   constructor(options = {}){
     //extend options to think
-    think.extend(think, this.getPath(), options);
+    think.extend(think, this.getDefaultPath(), options);
 
     //normalize path
     think.APP_PATH = path.normalize(think.APP_PATH);
@@ -46,30 +46,17 @@ export default class {
         think.cli = argv;
       }
     }
-    //get app mode
-    think.mode = this.getMode();
-  }
-  /**
-   * get app mode
-   * @return {Number} [app mode]
-   */
-  getMode(){
-    let filepath = `${think.APP_PATH}/${think.dirname.controller}`;
-    if (think.isDir(filepath)) {
-      return think.mode_normal;
-    }
-    return think.mode_module;
   }
   /**
    * get app path
    * @return {Object} []
    */
-  getPath(){
+  getDefaultPath(){
     let filepath = process.argv[1];
     let RESOURCE_PATH = path.dirname(filepath);
     let ROOT_PATH = path.dirname(RESOURCE_PATH);
     let APP_PATH = `${ROOT_PATH}${think.sep}app`;
-    let RUNTIME_PATH = ROOT_PATH + think.sep + think.dirname.runtime;
+    let RUNTIME_PATH = ROOT_PATH + think.sep + 'runtime';
     return {
       APP_PATH,
       RESOURCE_PATH,
@@ -77,43 +64,7 @@ export default class {
       RUNTIME_PATH
     };
   }
-  /**
-   * check node env
-   * @return {Boolean} []
-   */
-  checkEnv(){
-    this.checkNodeVersion();
-  }
   
-  /**
-   * get app module list
-   * @return {} []
-   */
-  getModule(){
-    //only have default module in mini mode
-    if (think.mode === think.mode_normal) {
-      think.module = [think.config('default_module')];
-      return think.module;
-    }
-    let modulePath = think.APP_PATH;
-    if(!think.isDir(modulePath)){
-      return [];
-    }
-    let modules = fs.readdirSync(modulePath);
-    let denyModuleList = think.config('deny_module_list') || [];
-    if (denyModuleList.length > 0) {
-      modules = modules.filter(module => {
-        if(module[0] === '.'){
-          return;
-        }
-        if (denyModuleList.indexOf(module) === -1) {
-          return module;
-        }
-      });
-    }
-    think.module = modules;
-    return modules;
-  }
   /**
    * load alias
    * @return {} []

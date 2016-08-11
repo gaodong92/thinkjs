@@ -79,58 +79,5 @@ export default {
         think.log(`package \`${pkg}\` is not installed. please run \`npm install\` command before start server.`, 'EXIT');
       }
     }
-  },
-  /**
-   * check module config
-   * @return {} []
-   */
-  checkModuleConfig(){
-    if(think.mode !== think.mode_module){
-      return;
-    }
-    // check module config
-    // some config must be set in common module
-    let keys = [], errorKey = 'error_config_key';
-    let errorConfigKeys = thinkCache(thinkCache.COLLECTION, errorKey);
-    if(think.isEmpty(errorConfigKeys)){
-      thinkCache(thinkCache.COLLECTION, errorKey, []);
-      errorConfigKeys = thinkCache(thinkCache.COLLECTION, errorKey);
-    }
-
-    let checkMConfig = module => {
-      if(keys.length === 0){
-        keys = Object.keys(think.safeRequire(`${think.THINK_LIB_PATH}/config/config.js`));
-      }
-
-      //check config key not set as file name
-      keys.forEach(item => {
-        let configFilePath = think.getPath(module, think.dirname.config) + '/' + item + '.js';
-        if(think.isFile(configFilePath)){
-          think.log(`file \`config${think.sep}${item}.js\` is not allowed, it's already used for config key.`, 'EXIT');
-        }
-      }); 
-
-      if(module === 'common'){
-        return;
-      }
-
-      let configFilePath = think.getPath(module, think.dirname.config) + '/config.js';
-      if(!think.isFile(configFilePath)){
-        return;
-      }
-      let config = think.safeRequire(configFilePath);
-      keys.forEach(key => {
-        if(config[key] && errorConfigKeys.indexOf(key) === -1){
-          errorConfigKeys.push(key);
-          think.log(`config key \`${key}\` can not be set in \`${module}\` module, must be set in \`common\` module`, 'WARNING');
-        }
-      });
-    };
-
-    let modules = think.module;
-    //load modules config
-    modules.forEach(module => {
-      checkMConfig(module);
-    });
   }
 };

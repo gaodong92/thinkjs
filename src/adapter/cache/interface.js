@@ -14,7 +14,7 @@ export default class CacheInterface {
    * @returns Promise<any>
    */
   async get(name){
-
+   
   }
   /**
    * set cache

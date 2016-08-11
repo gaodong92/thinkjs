@@ -1,81 +1,122 @@
 'use strict';
 
-import path from 'path';
-
 /**
- * Base Class
- * @param  {Object} http
+ * Base Class with context
  * @return {Class}
  */
-export default class {
-  /**
-   * constructor
-   * @param  {Object} http []
-   * @return {}      []
-   */
-  constructor(...args){
-    this.init(...args);
-  }
+export default class Base {
   /**
    * init
    * @param  {Object} http []
    * @return {}      []
    */
-  init(){
+  constructor(ctx = {}){
+    this.ctx = ctx;
   }
   /**
-   * invoke method, support __before & __after magic methods
-   * @param  {String} method []
-   * @param  {mixed} data []
-   * @return {Promise}    []
+   * get or set config
+   * @param  {string} name  [config name]
+   * @param  {mixed} value [config value]
+   * @return {mixed}       []
    */
-  async invoke(method, ...data){
-    if (this.__before) {
-      await think.co(this.__before(this));
-    }
-    // Check whether method exists
-    if (!this[method]){
-      return Promise.reject(new Error(think.locale('METHOD_NOT_EXIST', method)));
-    }
-    let result = await think.co(this[method](...data));
-    if (this.__after) {
-      await think.co(this.__after(this));
-    }
-    return result;
+  config(name, value){
+    return think.config(name, value);
   }
   /**
-   * get file basename
-   * @param  {String} filepath []
-   * @return {String}          []
+   * change module/controller/action when invoked action
+   * @param  {Object} controller []
+   * @param  {String} action     []
+   * @return {Promise}            []
    */
-  basename(filepath = this.__filename){
-    return path.basename(filepath, '.js');
+  async _transMCAAction(controller, action){
+    //change module/controller/action when invoke another action
+    //make this.display() correct when invoked without any paramters
+    let http = this.http;
+    let source = {
+      module: http.module,
+      controller: http.controller,
+      action: http.action
+    };
+    //parse module from pathname
+    http.module = think.config('default_module');
+    if(think.mode === think.mode_module){
+      http.module = controller.__filename.split(think.sep).reverse()[2];
+    }
+
+    http.controller = this.basename(controller.__filename);
+    http.action = action;
+    if (action !== '__call') {
+      action = think.camelCase(action) + 'Action';
+    }
+    let err;
+    let result = await controller.invoke(action, controller).catch(e => {
+      err = e;
+    });
+    think.extend(http, source);
+    return err ? Promise.reject(err) : result;
   }
   /**
-   * parse module from filepath
-   * @param  {String} filepath []
-   * @return {String}          []
+   * invoke action
+   * @param  {Object} controller [controller instance]
+   * @param  {String} action     [action name]
+   * @param  {Mixed} data       [action params]
+   * @return {}            []
    */
-  parseModuleFromPath(filepath = this.__filename){
-    if (!filepath){
-      return '';
+  action(controller, action, transMCA = true){
+    if (think.isString(controller)) {
+      controller = this.controller(controller);
     }
-    if (think.mode !== think.mode_module){
-      return '';
+    if(!transMCA){
+      if (action !== '__call') {
+        action = think.camelCase(action) + 'Action';
+      }
+      return controller.invoke(action, controller);
     }
-    let prefix = think.APP_PATH + think.sep;
-    let pos = filepath.indexOf(prefix);
-    if (pos === -1){
-      return '';
-    }
-    let nextPos = filepath.indexOf(think.sep, pos + prefix.length);
-    if (nextPos === -1){
-      return '';
-    }
-    let module = filepath.slice(pos + prefix.length, nextPos);
-    if (think.module.indexOf(module) > -1){
-      return module;
-    }
-    return '';
+    return this._transMCAAction(controller, action);
+  }
+  /**
+   * get or set cache
+   * @param  {String} name    [cache name]
+   * @param  {mixed} value   [cache value]
+   * @param  {Object} options [cache options]
+   * @return {}         []
+   */
+  cache(name, value, options){
+    return think.cache(name, value, options);
+  }
+  /**
+   * invoke hook
+   * @param  {String} event [event name]
+   * @return {Promise}       []
+   */
+  hook(event, data){
+    return think.hook.exec(event, this.http, data);
+  }
+  /**
+   * get model
+   * @param  {String} name    [model name]
+   * @param  {Object} options [model options]
+   * @return {Object}         [model instance]
+   */
+  model(name, options){
+    return think.model(name, options);
+  }
+  /**
+   * get controller
+   * this.controller('home/controller/test')
+   * @param  {String} name [controller name]
+   * @return {Object}      []
+   */
+  controller(name){
+    let Cls = think.lookClass(name, 'controller');
+    return new Cls(this.http);
+  }
+  /**
+   * get service
+   * @param  {String} name [service name]
+   * @return {Object}      []
+   */
+  service(name){
+    return think.service(name);
   }
 }
