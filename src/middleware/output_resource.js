@@ -7,7 +7,7 @@ import mime from 'mime';
  * output resource
  * @type {}
  */
-export default class extends think.middleware.base {
+export default class OutputResource extends think.middleware.base {
   /**
    * run
    * @return {} []

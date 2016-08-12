@@ -24,7 +24,7 @@ import url from 'url';
  * }
  */
 
-export default class extends think.middleware.base {
+export default class ParseRoute extends think.middleware.base {
   /**
    * run
    * @return {Promise} []

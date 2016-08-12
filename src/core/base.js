@@ -37,22 +37,13 @@ export default class Base {
     return result;
   }
   /**
-   * get or set config
-   * @param  {string} name  [config name]
-   * @param  {mixed} value [config value]
-   * @return {mixed}       []
-   */
-  config(name, value){
-    return think.config(name, value);
-  }
-  /**
    * change module/controller/action when invoked action
    * @param  {Object} controller []
    * @param  {String} action     []
    * @return {Promise}            []
    */
-  async _transMCAAction(controller, action){
-    //change module/controller/action when invoke another action
+  async _transAction(controller, action){
+    //change controller/action when invoke another action
     //make this.display() correct when invoked without any paramters
     let ctx = this.ctx;
     let source = {
@@ -79,17 +70,26 @@ export default class Base {
    * @param  {Mixed} data       [action params]
    * @return {}            []
    */
-  action(controller, action, transMCA = true){
+  action(controller, action, trans = true){
     if (think.isString(controller)) {
       controller = this.controller(controller);
     }
-    if(!transMCA){
+    if(!trans){
       if (action !== '__call') {
         action = think.camelCase(action) + 'Action';
       }
       return controller.invoke(action, controller);
     }
-    return this._transMCAAction(controller, action);
+    return this._transAction(controller, action);
+  }
+  /**
+   * get or set config
+   * @param  {string} name  [config name]
+   * @param  {mixed} value [config value]
+   * @return {mixed}       []
+   */
+  config(name, value){
+    return think.config(name, value);
   }
   /**
    * get or set cache
@@ -100,14 +100,6 @@ export default class Base {
    */
   cache(name, value, options){
     return think.cache(name, value, options);
-  }
-  /**
-   * invoke hook
-   * @param  {String} event [event name]
-   * @return {Promise}       []
-   */
-  hook(event, data){
-    return think.hook.exec(event, this.ctx, data);
   }
   /**
    * get model
@@ -125,8 +117,7 @@ export default class Base {
    * @return {Object}      []
    */
   controller(name){
-    let Cls = think.lookClass(name, 'controller');
-    return new Cls(this.http);
+    return think.controller(name, this.ctx);
   }
   /**
    * get service

@@ -10,7 +10,7 @@ const querystring = require('querystring');
 
 const MULTIPARTY_REG = /^multipart\/(form-data|related);\s*boundary=(?:"([^"]+)"|([^;]+))$/i;
 
-export default class extends think.middleware.base {
+export default class ParsePayload extends think.middleware.base {
   /**
    * run
    */
