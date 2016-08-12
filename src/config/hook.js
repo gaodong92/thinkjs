@@ -3,6 +3,7 @@
 export default [
   'output_resource',
   'parse_payload',
+  'rewrite_pathname',
   'parse_route',
   'exec_logic',
   'exec_controller'
