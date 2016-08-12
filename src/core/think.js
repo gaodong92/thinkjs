@@ -5,17 +5,11 @@ const path = require('path');
 const util = require('util');
 const querystring = require('querystring');
 
-import thinkit from 'thinkit';
+import helper from 'think-helper';
 
 import Cookie from '../util/cookie.js';
 import Http from './http.js';
 import Await from '../util/await.js';
-import Validate from './think_validate.js';
-import Middleware from './think_middleware.js';
-import Hook from './think_hook.js';
-import Route from './think_route.js';
-import Config from './think_config.js';
-import Adatper from './think_adapter.js';
 
 import './think_cache.js';
 import './think_data.js';
@@ -24,7 +18,7 @@ import './think_data.js';
  * global think variable
  * @type {Object}
  */
-global.think = Object.create(thinkit);
+global.think = Object.create(helper);
 
 /**
  * server start time
@@ -88,37 +82,37 @@ think.reject = (err) => {
  * validate 
  * @type {Function}
  */
-think.validate = Validate;
+// think.validate = Validate;
 
 /**
  * middleware
  * @type {Function}
  */
-think.middleware = Middleware;
+// think.middleware = Middleware;
 
 /**
  * hook
  * @type {Function}
  */
-think.hook = Hook;
+// think.hook = Hook;
 
 /**
  * route
  * @type {Function}
  */
-think.route = Route;
+// think.route = Route;
 
 /**
  * config
  * @type {Function}
  */
-think.config = Config;
+// think.config = Config;
 
 /**
  * adapter
  * @type {Function}
  */
-think.adapter = Adatper;
+// think.adapter = Adatper;
 
 /**
  * look up class
